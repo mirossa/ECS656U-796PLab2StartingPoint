@@ -9,21 +9,23 @@ import java.util.*;
 
 @Service
 public class GRPCClientService {
-
+	//list of ip addresses
 	String [] ip = new String[] {"localhost","localhost","localhost","localhost","localhost","localhost","localhost","localhost"};//"0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0"
-
+	//channels
 	ManagedChannel[] channel = new ManagedChannel[ip.length];
+	//stubs
 	MatrixServiceGrpc.MatrixServiceBlockingStub[] stub = new MatrixServiceGrpc.MatrixServiceBlockingStub[ip.length];
+	//index of the next server which the add/multiply operation should be executed on.
 	int current_server = 0 ;
 
 	//initialise channels and stubs
-	public void setup(){
+	public void initialise(){
 		for (int i=0;i<ip.length;i++){
 			channel[i] = ManagedChannelBuilder.forAddress(ip[i], 9090).usePlaintext().build();
 			stub[i] = MatrixServiceGrpc.newBlockingStub(channel[i]);
 		}
 	}
-
+	// ping server (unchanged)
 	public String ping() {
         	ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 9090)
                 .usePlaintext()
@@ -36,6 +38,7 @@ public class GRPCClientService {
 		channel.shutdown();
 		return helloResponse.getPong();
     }
+	// add 2 matrices (unchanged)
     public String add(){
 		ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost",9090)
 		.usePlaintext()
@@ -54,6 +57,7 @@ public class GRPCClientService {
 			.build());
 		return A.getC00()+" "+A.getC01()+"<br>"+A.getC10()+" "+A.getC11()+"\n";
     }
+	// multiply 2 matrices (unchanged)
     public String multiply(){
 		ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost",9090)
 		.usePlaintext()
@@ -72,6 +76,7 @@ public class GRPCClientService {
 			.build());
 		return A.getC00()+" "+A.getC01()+"<br>"+A.getC10()+" "+A.getC11()+"\n";
 	}
+	// process 2 input matrix files,
 	public String matAddOrMultiply(String s1, String s2, String operation) throws BadMatrixException{
 		//print matrices
 		System.out.println("matrix 1:\n"+s1);
@@ -81,36 +86,40 @@ public class GRPCClientService {
 			//parse input strings
 			int[][] m1 = str2Array(s1);
 			int[][] m2 = str2Array(s2);
-			//check that matrices are a power of two & dimensions are equal
+			//check that matrices are a power of 2 & dimensions are equal
 			if (powerOf2(m1) && powerOf2(m2) && m1.length == m2.length) {
 				if (Objects.equals(operation, "multiply")) {
-					//setup channnels & stubs
-					setup();
+					//setup channels & stubs
+					initialise();
+					//dimensions
 					int n = m1.length;
 					//generate random number
 					Random rand = new Random();
 					int randNum = rand.nextInt(ip.length);
 					//calculate time taken (in milliseconds)
 					int footprint = (int) footprint(stub[randNum]);
-					//estimate the total runtime
+					// estimate the total runtime
 					float total_runtime = (float) (n * footprint);
 					// deadline
-					float deadline = 200;// in miliseconds
+					float deadline = 200;// in milliseconds
 					// calculate number of required servers.
 					// if the number of servers required > the number of servers available then use all servers.
 					int serversrequired = Math.min((int) Math.ceil(total_runtime/deadline), ip.length);
 
 					System.out.println(serversrequired + " servers needed");
-					System.out.println("total runtime: "+total_runtime+"ms");
+					//System.out.println("total runtime: "+total_runtime+"ms");
 
 					//dot product result
 					int[][] C = multiplication(m1, m2);
-
-					return array2String(C);//convert to string
+					//print matrix product
+					System.out.println("product:\n"+array2String(C));
+					return array2String(C);//convert to string and return
 
 				}else if (Objects.equals(operation, "add")){
+					//note: deadline-based scaling is not performed for addition.
+					//result
 					int[][] C = addition(m1, m2);
-					//System.out.println("sum:\n"+array2String(C));
+					System.out.println("sum:\n"+array2String(C));
 
 					return array2String(C);
 				} else throw new IllegalArgumentException("Error: invalid operator. The operator must be either 'add' or 'multiply'.");
@@ -138,14 +147,12 @@ public class GRPCClientService {
 	public int[][] str2Array (String str) throws BadMatrixException {
 		//split into matrix into rows
 		String[] s1  = str.split("\\r?\\n");
-
 		//check that the matrix is square
 		int rows = s1.length;
 		for (String i:s1){
 			int cols = i.split(" ").length;
 			if (rows != cols) throw new BadMatrixException("Error: The matrix is not square. Check the matrix files.");
 		}
-
 		//parse string to int
 		try{
 			int[][] m1 = new int[rows][rows];
@@ -172,16 +179,11 @@ public class GRPCClientService {
 		return true;
 	}
 
-	//
-	public int[][] dotProduct(int[][]x, int[][]y){
-		int[][] a = dotProduct(x,y, current_server);
-		current_server = (current_server +1) % ip.length;// cycle through each stub
-		return a;
-	}
-
-	public int[][] dotProduct(int[][] m1 , int[][] m2, int i) {
-		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[i];
-
+	// call the multiplyBlock() server function and return the response
+	public int[][] dotProduct(int[][] m1 , int[][] m2) {
+		//select the next available stub
+		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[current_server];
+		current_server = (current_server +1) % ip.length;// iterate the stub index
 		MatrixReply A = stub.multiplyBlock(MatrixRequest.newBuilder()
 				.setA00(m1[0][0])
 				.setA01(m1[0][1])
@@ -196,14 +198,12 @@ public class GRPCClientService {
 		return new int[][]{{A.getC00(), A.getC01()}, {A.getC10(), A.getC11()}};
 	}
 
-	public int[][] matrixAdd(int[][]x, int[][]y){
-		int[][] a = matrixAdd(x,y, current_server);
-		current_server = (current_server +1) % ip.length;// cycle through each stub
-		return a;
-	}
-	public int[][] matrixAdd(int[][] m1, int[][] m2, int i){
-		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[i];
-
+	// call the addBlock() server function and return the response
+	public int[][] matrixAdd(int[][] m1, int[][] m2){
+		//select the next available stub
+		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[current_server];
+		current_server = (current_server +1) % ip.length;// iterate the stub index
+		//server reply
 		MatrixReply A = stub.addBlock(MatrixRequest.newBuilder()
 				.setA00(m1[0][0])
 				.setA01(m1[0][1])
@@ -218,18 +218,27 @@ public class GRPCClientService {
 		return new int[][] {{A.getC00(), A.getC01()}, {A.getC10(), A.getC11()}};
 	}
 
-	//divide the matrix into 4 recursively and calculate the dot product for each 2x2 matrix using the server
-	public int[][] multiplication(int[][]x, int[][]y){
-		int[][][] C ;
-
-		if (x.length ==2)
-			return dotProduct(x,y);
+	// calculate the dot product of two NxN matrices
+	public int[][] multiplication(int[][] x, int[][] y){
+		int[][][] product ;//product
+		// scalar multiplication, only used if input is a scalar
+		if (x.length ==1) return new int[][] {{x[0][0]*y[0][0]}};
+		// call the multBlock() server function if the inputs have 2x2 dimensions
+		if (x.length ==2) return dotProduct(x,y);
+			//if the matrix is bigger than 2x2, divide each matrix into 4 blocks and
+			// calculate the dot product of each block recursively.
 		else {
-			//divide each matrix into 4 blocks
-			int [][][] m1=disassemble(x,2);
-			int [][][] m2=disassemble(y,2);
-			C = new int[m1.length][][];
-			for(int i =0;i<m1.length;i++){
+			// divide the matrix into 4 blocks
+			int [][][] m1=disassemble(x);
+			int [][][] m2=disassemble(y);
+			product = new int[m1.length][][];
+			for(int i =0;i<4;i++){
+				//  calculate the dot product of each of the 4 quadrants:
+				//  ---------       ---------       -----------------------------
+				//  | a | b |       | e | f |       | (a*e)+(b*g) | (a*f)+(b*h) |
+				//  ---------   *   ---------   =   -----------------------------
+				//  | c | d |       | g | h |       | (c*e)+(d*g) | (c*f)+(d*h) |
+				//  ---------       ---------       -----------------------------
 
 				int[][] a = m1[0];
 				int[][] b = m1[1];
@@ -240,50 +249,43 @@ public class GRPCClientService {
 				int[][] g = m2[2];
 				int[][] h = m2[3];
 
-				C[0] = addition(multiplication(a,e), multiplication(b,g));
-				C[1] = addition(multiplication(a,f), multiplication(b,h));
-				C[2] = addition(multiplication(c,e), multiplication(d,g));
-				C[3] = addition(multiplication(c,f), multiplication(d,h));//4 *12 *12
-
-				//System.out.println("r "+Arrays.deepToString(p));
-				if(i>=3)break;
+				product[0] = addition(multiplication(a,e), multiplication(b,g));
+				product[1] = addition(multiplication(a,f), multiplication(b,h));
+				product[2] = addition(multiplication(c,e), multiplication(d,g));
+				product[3] = addition(multiplication(c,f), multiplication(d,h));
 			}
-			return reassemble(C);
+			// combine the 4 quadrants back into 1 matrix
+			return reassemble(product);
 		}
 	}
-	//divide the matrix into 4 recursively and calculate the sum of each 2x2 matrix using the server
+	// calculate the sum of two NxN matrices
 	public int[][] addition(int[][]x, int[][]y){
-		int[][][] p ;
-		int [][] q;
+		int[][][] result ;
+		int [][] sum;
+		if (x.length ==1) return new int[][] {{x[0][0],y[0][0]}};
 		//make a server request
-		if (x.length ==2) q = matrixAdd(x,y);
+		if (x.length ==2) sum = matrixAdd(x,y);
 		else {
 			//divide into 4
-			int [][][] m1=disassemble(x,2);
-			int [][][] m2=disassemble(y,2);
-			p = new int[m1.length][][];
-			for(int i =0;i<m1.length;i++){
-				//if(x.length==8) System.out.println("x "+ x.length);
-				//if(x.length==8) System.out.println("i "+ i);
-				p[i] = addition(m1[i],m2[i]);
-				//System.out.println("r "+Arrays.deepToString(p));
-				if(i>=3)break;
+			int [][][] m1 = disassemble(x);
+			int [][][] m2 = disassemble(y);
+			result = new int[m1.length][][];
+			//add the nth block of m1 to the nth block of m2
+			for(int i =0;i<4;i++){
+				result[i] = addition(m1[i],m2[i]);
 			}
-			//if(x.length==8) System.out.println("here???");
-			q=reassemble(p);
+			sum=reassemble(result);
 		}
-
-		//if(x.length==8) System.out.println("here???");
-		return q;
+		return sum;
 	}
 
-	//divide an NxN matrix into 4 sub-matrices
-	public int [][][] disassemble(int [][] a, int rows){
+	//divide an NxN matrix into 4 blocks
+	public int [][][] disassemble(int [][] a){
 		int row = a.length/2;
+		int rows = 2;
 		ArrayList<int[][]> divided = new ArrayList<>();
 		int counterRow = 0;
 		int counterColumn = 0;
-
 		for (int i = 0; i < rows; i++) {
 			loops:
 			for (int j = 0; j < rows; j++) {
@@ -304,25 +306,22 @@ public class GRPCClientService {
 			divided_blocks[i] = divided.get(i);
 		}
 		int[][][] k = new int[divided_blocks.length][][];
-		k[0]=divided_blocks[0];
-		k[1]=divided_blocks[2];
-		k[2]=divided_blocks[1];
-		k[3]=divided_blocks[3];
+		k[0] = divided_blocks[0];
+		k[1] = divided_blocks[2];
+		k[2] = divided_blocks[1];
+		k[3] = divided_blocks[3];
 
-		//System.out.println("qqq "+Arrays.deepToString(k));
 		return k;
 	}
-	//combine 4 sub-matrices into 1 big matrix
+	//combine 4 blocks into 1 big matrix
 	public int[][] reassemble(int [][][] x){
 		int n = x[0].length;
 		int[][] out = new int [n*2][2*n];
-
 		int count = 0;
 		int count2 = 0;
 		do {
 			int j = 0;
 			while (j < n) {
-				//System.out.println(count);
 				System.arraycopy(x[count][j], 0, out[count2], 0, n);
 				System.arraycopy(x[count + 1][j], 0, out[count2], n, n);
 				count2++;
@@ -333,17 +332,11 @@ public class GRPCClientService {
 		return out;
 	}
 
-	//calculate time taken for multiply operation to complete
+	//calculate the time taken a multiplyBlock() server operation to complete
 	public long footprint(MatrixServiceGrpc.MatrixServiceBlockingStub fpStub) {
 		long tick = System.currentTimeMillis();//start time
 		MatrixReply A = fpStub.multiplyBlock(MatrixRequest.newBuilder().setA00(1).setB00(1).build());//server function call
 		long tock = System.currentTimeMillis();//end time
 		return tock-tick;
 	}
-
-
-
-
-
 }
-
