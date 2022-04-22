@@ -10,7 +10,7 @@ import java.util.*;
 @Service
 public class GRPCClientService {
 	//list of ip addresses
-	String [] ip = new String[] {"localhost","localhost","localhost","localhost","localhost","localhost","localhost","localhost"};//"0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0","0.0.0.0"
+	String [] ip = new String[] {"34.125.79.72","34.125.47.150","34.125.45.90","34.125.57.144","34.125.31.55","34.125.211.94","34.125.106.225","34.125.172.165"};
 	//channels
 	ManagedChannel[] channel = new ManagedChannel[ip.length];
 	//stubs
