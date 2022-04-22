@@ -5,14 +5,13 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.stereotype.Service;
 
-
 import java.util.*;
 
 
 @Service
 public class GRPCClientService {
 	//list of ip addresses
-	String [] ip = new String[] {"34.125.31.55","34.125.45.90","34.125.79.72","34.125.57.144","34.125.47.150","34.125.106.225","34.125.211.94"};
+	String [] ip = new String[] {"localhost"};//{"10.182.0.8","10.182.0.9","10.182.0.10","10.182.0.11","10.182.0.12","10.182.0.4","10.182.0.6","10.182.0.16"};
 	//channels
 	ManagedChannel[] channel = new ManagedChannel[ip.length];
 	//stubs
@@ -217,7 +216,6 @@ public class GRPCClientService {
 				.setB10(m2[1][0])
 				.setB11(m2[1][1])
 				.build());
-
 		return new int[][] {{A.getC00(), A.getC01()}, {A.getC10(), A.getC11()}};
 	}
 
@@ -263,24 +261,26 @@ public class GRPCClientService {
 	}
 	// calculate the sum of two NxN matrices
 	public int[][] addition(int[][]x, int[][]y){
-		int[][][] result ;
+		int [][][] result ;
 		int [][] sum;
 		if (x.length ==1) return new int[][] {{x[0][0],y[0][0]}};
 		//make a server request
-		if (x.length ==2) sum = matrixAdd(x,y);
+		if (x.length ==2) {
+			sum = matrixAdd(x,y);
+		}
 		else {
 			//divide into 4
 			int [][][] m1 = disassemble(x);
 			int [][][] m2 = disassemble(y);
 			result = new int[m1.length][][];
-			//add the nth block of m1 to the nth block of m2
 			for(int i =0;i<4;i++){
 				result[i] = addition(m1[i],m2[i]);
 			}
-			sum=reassemble(result);
+			sum = reassemble(result);
 		}
 		return sum;
 	}
+
 
 	//divide an NxN matrix into 4 blocks
 	public int [][][] disassemble(int [][] a){
