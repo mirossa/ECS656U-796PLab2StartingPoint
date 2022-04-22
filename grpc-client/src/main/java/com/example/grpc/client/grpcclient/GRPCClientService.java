@@ -78,7 +78,7 @@ public class GRPCClientService {
 		return A.getC00()+" "+A.getC01()+"<br>"+A.getC10()+" "+A.getC11()+"\n";
 	}
 	// process 2 input matrix files,
-	public String matAddOrMultiply(String s1, String s2, String operation) throws BadMatrixException{
+	public String matAddOrMultiply(String s1, String s2, String operation, int deadline) throws BadMatrixException{
 		//print matrices
 		System.out.println("matrix 1:\n"+s1);
 		System.out.println("matrix 2:\n"+s2);
@@ -87,11 +87,11 @@ public class GRPCClientService {
 			//parse input strings
 			int[][] m1 = str2Array(s1);
 			int[][] m2 = str2Array(s2);
+			//setup channels & stubs
+			initialise();
 			//check that matrices are a power of 2 & dimensions are equal
 			if (powerOf2(m1) && powerOf2(m2) && m1.length == m2.length) {
 				if (Objects.equals(operation, "multiply")) {
-					//setup channels & stubs
-					initialise();
 					//dimensions
 					int n = m1.length;
 					//generate random number
@@ -102,11 +102,11 @@ public class GRPCClientService {
 					// estimate the total runtime
 					float total_runtime = (float) (n * footprint);
 					// deadline
-					float deadline = 200;// in milliseconds
+					//float deadline = 200;// in milliseconds
 					// calculate number of required servers.
 					// if the number of servers required > the number of servers available then use all servers.
 					int serversrequired = Math.min((int) Math.ceil(total_runtime/deadline), ip.length);
-					if(serversrequired==8) System.out.println("warning: the ");
+					if(serversrequired==8) System.out.println("warning: the operation requires more servers than there are available to meet the deadline.");
 					System.out.println(serversrequired + " servers needed");
 					//System.out.println("total runtime: "+total_runtime+"ms");
 
@@ -119,7 +119,6 @@ public class GRPCClientService {
 				}else if (Objects.equals(operation, "add")){
 					//note: deadline-based scaling is not performed for addition.
 					//result
-					initialise();
 					int[][] C = addition(m1, m2);
 					System.out.println("sum:\n"+array2String(C));
 
