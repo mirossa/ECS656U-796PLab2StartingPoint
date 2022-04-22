@@ -4,13 +4,15 @@ import com.example.grpc.server.grpcserver.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.stereotype.Service;
+
+
 import java.util.*;
 
 
 @Service
 public class GRPCClientService {
 	//list of ip addresses
-	String [] ip = new String[] {"34.125.79.72","34.125.47.150","34.125.45.90","34.125.57.144","34.125.31.55","34.125.211.94","34.125.106.225","34.125.172.165"};
+	String [] ip = new String[] {"localhost","localhost","localhost","localhost","localhost","localhost","localhost","localhost"};//"34.125.45.90","34.125.57.144","34.125.57.144","34.125.47.150","34.125.211.94","34.125.79.72","34.125.172.165","34.125.31.55"
 	//channels
 	ManagedChannel[] channel = new ManagedChannel[ip.length];
 	//stubs
@@ -105,7 +107,7 @@ public class GRPCClientService {
 					// calculate number of required servers.
 					// if the number of servers required > the number of servers available then use all servers.
 					int serversrequired = Math.min((int) Math.ceil(total_runtime/deadline), ip.length);
-
+					if(serversrequired==8) System.out.println("warning: the ");
 					System.out.println(serversrequired + " servers needed");
 					//System.out.println("total runtime: "+total_runtime+"ms");
 
@@ -118,6 +120,7 @@ public class GRPCClientService {
 				}else if (Objects.equals(operation, "add")){
 					//note: deadline-based scaling is not performed for addition.
 					//result
+					initialise();
 					int[][] C = addition(m1, m2);
 					System.out.println("sum:\n"+array2String(C));
 
@@ -164,7 +167,7 @@ public class GRPCClientService {
 			}
 			return m1;
 		}catch(Exception e){
-			throw new BadMatrixException("Error: Could not parse matrices. Check that there are no invalid characters in the files." + e);
+			throw new BadMatrixException("Error: Could not parse matrices. Check that there are no invalid characters in the files.");
 		}
 	}
 
@@ -182,9 +185,9 @@ public class GRPCClientService {
 	// call the multiplyBlock() server function and return the response
 	public int[][] dotProduct(int[][] m1 , int[][] m2) {
 		//select the next available stub
-		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[current_server];
+		MatrixServiceGrpc.MatrixServiceBlockingStub stub1 = this.stub[current_server];
 		current_server = (current_server +1) % ip.length;// iterate the stub index
-		MatrixReply A = stub.multiplyBlock(MatrixRequest.newBuilder()
+		MatrixReply A = stub1.multiplyBlock(MatrixRequest.newBuilder()
 				.setA00(m1[0][0])
 				.setA01(m1[0][1])
 				.setA10(m1[1][0])
@@ -201,10 +204,10 @@ public class GRPCClientService {
 	// call the addBlock() server function and return the response
 	public int[][] matrixAdd(int[][] m1, int[][] m2){
 		//select the next available stub
-		MatrixServiceGrpc.MatrixServiceBlockingStub stub = this.stub[current_server];
+		MatrixServiceGrpc.MatrixServiceBlockingStub stub1 = this.stub[current_server];
 		current_server = (current_server +1) % ip.length;// iterate the stub index
 		//server reply
-		MatrixReply A = stub.addBlock(MatrixRequest.newBuilder()
+		MatrixReply A = stub1.addBlock(MatrixRequest.newBuilder()
 				.setA00(m1[0][0])
 				.setA01(m1[0][1])
 				.setA10(m1[1][0])
@@ -335,7 +338,7 @@ public class GRPCClientService {
 	//calculate the time taken a multiplyBlock() server operation to complete
 	public long footprint(MatrixServiceGrpc.MatrixServiceBlockingStub fpStub) {
 		long tick = System.currentTimeMillis();//start time
-		MatrixReply A = fpStub.multiplyBlock(MatrixRequest.newBuilder().setA00(1).setB00(1).build());//server function call
+		MatrixReply A = fpStub.multiplyBlock(MatrixRequest.newBuilder().setA00(1).setA11(1).setB00(1).setB11(1).build());//server function call
 		long tock = System.currentTimeMillis();//end time
 		return tock-tick;
 	}

@@ -44,11 +44,35 @@ public final class MatrixServiceGrpc {
           .build();
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   public static final io.grpc.MethodDescriptor<com.example.grpc.server.grpcserver.MatrixRequest,
+      com.example.grpc.server.grpcserver.MatrixReply> METHOD_MULTIPLY_BLOCKSTREAM =
+      io.grpc.MethodDescriptor.<com.example.grpc.server.grpcserver.MatrixRequest, com.example.grpc.server.grpcserver.MatrixReply>newBuilder()
+          .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+          .setFullMethodName(generateFullMethodName(
+              "matrixmult.MatrixService", "MultiplyBlockstream"))
+          .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+              com.example.grpc.server.grpcserver.MatrixRequest.getDefaultInstance()))
+          .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+              com.example.grpc.server.grpcserver.MatrixReply.getDefaultInstance()))
+          .build();
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static final io.grpc.MethodDescriptor<com.example.grpc.server.grpcserver.MatrixRequest,
       com.example.grpc.server.grpcserver.MatrixReply> METHOD_ADD_BLOCK =
       io.grpc.MethodDescriptor.<com.example.grpc.server.grpcserver.MatrixRequest, com.example.grpc.server.grpcserver.MatrixReply>newBuilder()
           .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
           .setFullMethodName(generateFullMethodName(
               "matrixmult.MatrixService", "AddBlock"))
+          .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+              com.example.grpc.server.grpcserver.MatrixRequest.getDefaultInstance()))
+          .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+              com.example.grpc.server.grpcserver.MatrixReply.getDefaultInstance()))
+          .build();
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static final io.grpc.MethodDescriptor<com.example.grpc.server.grpcserver.MatrixRequest,
+      com.example.grpc.server.grpcserver.MatrixReply> METHOD_ADD_BLOCKSTREAM =
+      io.grpc.MethodDescriptor.<com.example.grpc.server.grpcserver.MatrixRequest, com.example.grpc.server.grpcserver.MatrixReply>newBuilder()
+          .setType(io.grpc.MethodDescriptor.MethodType.SERVER_STREAMING)
+          .setFullMethodName(generateFullMethodName(
+              "matrixmult.MatrixService", "AddBlockstream"))
           .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
               com.example.grpc.server.grpcserver.MatrixRequest.getDefaultInstance()))
           .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
@@ -94,9 +118,23 @@ public final class MatrixServiceGrpc {
 
     /**
      */
+    public void multiplyBlockstream(com.example.grpc.server.grpcserver.MatrixRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
+      asyncUnimplementedUnaryCall(METHOD_MULTIPLY_BLOCKSTREAM, responseObserver);
+    }
+
+    /**
+     */
     public void addBlock(com.example.grpc.server.grpcserver.MatrixRequest request,
         io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
       asyncUnimplementedUnaryCall(METHOD_ADD_BLOCK, responseObserver);
+    }
+
+    /**
+     */
+    public void addBlockstream(com.example.grpc.server.grpcserver.MatrixRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
+      asyncUnimplementedUnaryCall(METHOD_ADD_BLOCKSTREAM, responseObserver);
     }
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
@@ -109,12 +147,26 @@ public final class MatrixServiceGrpc {
                 com.example.grpc.server.grpcserver.MatrixReply>(
                   this, METHODID_MULTIPLY_BLOCK)))
           .addMethod(
+            METHOD_MULTIPLY_BLOCKSTREAM,
+            asyncServerStreamingCall(
+              new MethodHandlers<
+                com.example.grpc.server.grpcserver.MatrixRequest,
+                com.example.grpc.server.grpcserver.MatrixReply>(
+                  this, METHODID_MULTIPLY_BLOCKSTREAM)))
+          .addMethod(
             METHOD_ADD_BLOCK,
             asyncUnaryCall(
               new MethodHandlers<
                 com.example.grpc.server.grpcserver.MatrixRequest,
                 com.example.grpc.server.grpcserver.MatrixReply>(
                   this, METHODID_ADD_BLOCK)))
+          .addMethod(
+            METHOD_ADD_BLOCKSTREAM,
+            asyncServerStreamingCall(
+              new MethodHandlers<
+                com.example.grpc.server.grpcserver.MatrixRequest,
+                com.example.grpc.server.grpcserver.MatrixReply>(
+                  this, METHODID_ADD_BLOCKSTREAM)))
           .build();
     }
   }
@@ -150,10 +202,26 @@ public final class MatrixServiceGrpc {
 
     /**
      */
+    public void multiplyBlockstream(com.example.grpc.server.grpcserver.MatrixRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
+      asyncServerStreamingCall(
+          getChannel().newCall(METHOD_MULTIPLY_BLOCKSTREAM, getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
     public void addBlock(com.example.grpc.server.grpcserver.MatrixRequest request,
         io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
       asyncUnaryCall(
           getChannel().newCall(METHOD_ADD_BLOCK, getCallOptions()), request, responseObserver);
+    }
+
+    /**
+     */
+    public void addBlockstream(com.example.grpc.server.grpcserver.MatrixRequest request,
+        io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply> responseObserver) {
+      asyncServerStreamingCall(
+          getChannel().newCall(METHOD_ADD_BLOCKSTREAM, getCallOptions()), request, responseObserver);
     }
   }
 
@@ -187,9 +255,25 @@ public final class MatrixServiceGrpc {
 
     /**
      */
+    public java.util.Iterator<com.example.grpc.server.grpcserver.MatrixReply> multiplyBlockstream(
+        com.example.grpc.server.grpcserver.MatrixRequest request) {
+      return blockingServerStreamingCall(
+          getChannel(), METHOD_MULTIPLY_BLOCKSTREAM, getCallOptions(), request);
+    }
+
+    /**
+     */
     public com.example.grpc.server.grpcserver.MatrixReply addBlock(com.example.grpc.server.grpcserver.MatrixRequest request) {
       return blockingUnaryCall(
           getChannel(), METHOD_ADD_BLOCK, getCallOptions(), request);
+    }
+
+    /**
+     */
+    public java.util.Iterator<com.example.grpc.server.grpcserver.MatrixReply> addBlockstream(
+        com.example.grpc.server.grpcserver.MatrixRequest request) {
+      return blockingServerStreamingCall(
+          getChannel(), METHOD_ADD_BLOCKSTREAM, getCallOptions(), request);
     }
   }
 
@@ -232,7 +316,9 @@ public final class MatrixServiceGrpc {
   }
 
   private static final int METHODID_MULTIPLY_BLOCK = 0;
-  private static final int METHODID_ADD_BLOCK = 1;
+  private static final int METHODID_MULTIPLY_BLOCKSTREAM = 1;
+  private static final int METHODID_ADD_BLOCK = 2;
+  private static final int METHODID_ADD_BLOCKSTREAM = 3;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -255,8 +341,16 @@ public final class MatrixServiceGrpc {
           serviceImpl.multiplyBlock((com.example.grpc.server.grpcserver.MatrixRequest) request,
               (io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply>) responseObserver);
           break;
+        case METHODID_MULTIPLY_BLOCKSTREAM:
+          serviceImpl.multiplyBlockstream((com.example.grpc.server.grpcserver.MatrixRequest) request,
+              (io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply>) responseObserver);
+          break;
         case METHODID_ADD_BLOCK:
           serviceImpl.addBlock((com.example.grpc.server.grpcserver.MatrixRequest) request,
+              (io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply>) responseObserver);
+          break;
+        case METHODID_ADD_BLOCKSTREAM:
+          serviceImpl.addBlockstream((com.example.grpc.server.grpcserver.MatrixRequest) request,
               (io.grpc.stub.StreamObserver<com.example.grpc.server.grpcserver.MatrixReply>) responseObserver);
           break;
         default:
@@ -293,7 +387,9 @@ public final class MatrixServiceGrpc {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new MatrixServiceDescriptorSupplier())
               .addMethod(METHOD_MULTIPLY_BLOCK)
+              .addMethod(METHOD_MULTIPLY_BLOCKSTREAM)
               .addMethod(METHOD_ADD_BLOCK)
+              .addMethod(METHOD_ADD_BLOCKSTREAM)
               .build();
         }
       }

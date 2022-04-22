@@ -23,7 +23,9 @@ package matrixmult;
 // The matrix service definition.
 service MatrixService{
   rpc MultiplyBlock (MatrixRequest) returns (MatrixReply) {}
+  rpc MultiplyBlockstream (MatrixRequest) returns (stream MatrixReply) {}
   rpc AddBlock (MatrixRequest) returns (MatrixReply) {}
+  rpc AddBlockstream (MatrixRequest) returns (stream MatrixReply) {}
 }
 
 // The request message containing the two matricies
@@ -46,6 +48,7 @@ message MatrixReply {
   int32 c11 = 4;
 
 }
+
 
 
 

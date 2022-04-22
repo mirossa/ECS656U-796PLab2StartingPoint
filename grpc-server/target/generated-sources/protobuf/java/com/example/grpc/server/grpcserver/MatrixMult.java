@@ -38,12 +38,16 @@ public final class MatrixMult {
       "(\005\022\013\n\003a11\030\004 \001(\005\022\013\n\003b00\030\005 \001(\005\022\013\n\003b01\030\006 \001(" +
       "\005\022\013\n\003b10\030\007 \001(\005\022\013\n\003b11\030\010 \001(\005\"A\n\013MatrixRep" +
       "ly\022\013\n\003c00\030\001 \001(\005\022\013\n\003c01\030\002 \001(\005\022\013\n\003c10\030\003 \001(" +
-      "\005\022\013\n\003c11\030\004 \001(\0052\230\001\n\rMatrixService\022E\n\rMult" +
+      "\005\022\013\n\003c11\030\004 \001(\0052\261\002\n\rMatrixService\022E\n\rMult" +
       "iplyBlock\022\031.matrixmult.MatrixRequest\032\027.m" +
-      "atrixmult.MatrixReply\"\000\022@\n\010AddBlock\022\031.ma" +
-      "trixmult.MatrixRequest\032\027.matrixmult.Matr" +
-      "ixReply\"\000B7\n\"com.example.grpc.server.grp",
-      "cserverB\nMatrixMultP\001\242\002\002MMb\006proto3"
+      "atrixmult.MatrixReply\"\000\022M\n\023MultiplyBlock" +
+      "stream\022\031.matrixmult.MatrixRequest\032\027.matr" +
+      "ixmult.MatrixReply\"\0000\001\022@\n\010AddBlock\022\031.mat",
+      "rixmult.MatrixRequest\032\027.matrixmult.Matri" +
+      "xReply\"\000\022H\n\016AddBlockstream\022\031.matrixmult." +
+      "MatrixRequest\032\027.matrixmult.MatrixReply\"\000" +
+      "0\001B7\n\"com.example.grpc.server.grpcserver" +
+      "B\nMatrixMultP\001\242\002\002MMb\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
